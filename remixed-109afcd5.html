@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Marketplace Data Analysis — Senior Analyst Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #151820;
+    --surface2: #1c2030;
+    --border: #252a38;
+    --accent: #4f9cf9;
+    --accent2: #7ee8a2;
+    --accent3: #f9a84f;
+    --accent4: #f96f6f;
+    --accent5: #b97df5;
+    --text: #e8eaf0;
+    --muted: #8890a8;
+    --faint: #3a4055;
+    --code-bg: #111318;
+    --tag-bg: #1e2538;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* TOP HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo {
+    width: 36px; height: 36px; border-radius: 8px;
+    background: linear-gradient(135deg, #4f9cf9, #7ee8a2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600; font-size: 14px; color: #000;
+  }
+  .header-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .header-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .progress-wrap { display: flex; align-items: center; gap: 10px; }
+  .progress-text { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+  .progress-bar { width: 140px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #4f9cf9, #7ee8a2); border-radius: 2px; transition: width 0.4s ease; }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 77px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 0;
+    position: sticky;
+    top: 77px;
+    height: calc(100vh - 77px);
+    overflow-y: auto;
+  }
+  .sidebar-section { padding: 0 16px 8px; font-size: 10px; font-weight: 600; color: var(--faint); letter-spacing: 0.12em; text-transform: uppercase; }
+  .step-nav {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 0 8px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 6px;
+    cursor: pointer; transition: background 0.15s;
+    font-size: 12px; color: var(--muted);
+    border: none; background: none; text-align: left; width: 100%;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--tag-bg); color: var(--accent); }
+  .nav-item.done .nav-num { background: var(--accent2); color: #000; }
+  .nav-num {
+    width: 20px; height: 20px; border-radius: 4px;
+    background: var(--border); color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .nav-item.active .nav-num { background: var(--accent); color: #000; }
+
+  /* MAIN */
+  .main { padding: 32px 40px; max-width: 860px; }
+
+  /* STEP CARD */
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+  }
+  .step-card.visible { opacity: 1; transform: translateY(0); }
+  .step-card.dimmed { opacity: 0.35; }
+
+  .step-header {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 18px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .step-number {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    background: var(--tag-bg);
+    color: var(--accent);
+    padding: 3px 8px; border-radius: 4px;
+    margin-top: 2px; flex-shrink: 0;
+  }
+  .step-title-wrap { flex: 1; }
+  .step-title { font-size: 15px; font-weight: 500; color: var(--text); }
+  .step-subtitle { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .step-tags { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .tag {
+    font-size: 10px; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tag-blue  { background: #1a2a42; color: #4f9cf9; }
+  .tag-green { background: #1a2e24; color: #7ee8a2; }
+  .tag-amber { background: #2e2614; color: #f9a84f; }
+  .tag-pink  { background: #2e1a28; color: #f96fca; }
+  .tag-purple{ background: #221a2e; color: #b97df5; }
+  .tag-red   { background: #2e1a1a; color: #f96f6f; }
+  .step-status {
+    font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .dot-pending { background: var(--faint); }
+  .dot-running { background: var(--accent3); animation: pulse 1s infinite; }
+  .dot-done    { background: var(--accent2); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* CODE BLOCK */
+  .step-body { padding: 0; }
+  .code-wrap {
+    background: var(--code-bg);
+    border-top: 1px solid var(--border);
+    position: relative;
+  }
+  .code-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .code-lang {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .lang-dot { width: 8px; height: 8px; border-radius: 50%; background: #4f9cf9; }
+  .copy-btn {
+    font-size: 11px; color: var(--muted);
+    background: none; border: 1px solid var(--border);
+    padding: 3px 10px; border-radius: 4px;
+    cursor: pointer; transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .copy-btn:hover { color: var(--text); border-color: var(--faint); }
+
+  pre {
+    padding: 16px 20px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #c9d1e0;
+  }
+  .kw  { color: #b97df5; }
+  .fn  { color: #4f9cf9; }
+  .str { color: #7ee8a2; }
+  .cm  { color: #4a5268; font-style: italic; }
+  .num { color: #f9a84f; }
+  .op  { color: #f96fca; }
+  .var { color: #e8eaf0; }
+
+  /* OUTPUT BLOCK */
+  .output-wrap {
+    background: #0b0d12;
+    border-top: 1px solid var(--border);
+  }
+  .output-toolbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .output-label { font-size: 11px; color: var(--accent2); font-family: 'JetBrains Mono', monospace; }
+  .output-time  { font-size: 11px; color: var(--faint); margin-left: auto; font-family: 'JetBrains Mono', monospace; }
+  pre.output {
+    padding: 14px 20px;
+    color: #7ee8a2;
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  pre.output .out-label { color: #f9a84f; font-weight: 600; }
+  pre.output .out-col   { color: #4f9cf9; }
+  pre.output .out-val   { color: #e8eaf0; }
+  pre.output .out-muted { color: #4a5268; }
+
+  /* INSIGHT BLOCK */
+  .insight-wrap {
+    border-top: 1px solid var(--border);
+    padding: 14px 20px;
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .insight-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    background: #1e2b1e;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 14px; margin-top: 1px;
+  }
+  .insight-text { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .insight-text strong { color: var(--text); font-weight: 500; }
+
+  /* RUN BUTTON */
+  .run-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 6px;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: 12px; font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .run-btn:hover { background: var(--accent); color: #000; }
+  .run-btn.running { border-color: var(--accent3); color: var(--accent3); cursor: default; }
+  .run-btn.done    { border-color: var(--accent2); color: var(--accent2); }
+
+  /* RUN ALL */
+  .run-all-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .run-all-info { font-size: 13px; color: var(--muted); }
+  .run-all-info span { color: var(--text); font-weight: 500; }
+  .run-all-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 20px; border-radius: 7px;
+    background: linear-gradient(135deg, #4f9cf9, #7ee8a2);
+    border: none; color: #000;
+    font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer; transition: opacity 0.15s;
+  }
+  .run-all-btn:hover { opacity: 0.88; }
+  .run-all-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* SUMMARY */
+  .summary-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 12px; margin-bottom: 24px;
+  }
+  .sum-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px;
+  }
+  .sum-label { font-size: 11px; color: var(--muted); margin-bottom: 6px; }
+  .sum-value { font-size: 24px; font-weight: 500; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+  .sum-sub   { font-size: 11px; color: var(--faint); margin-top: 4px; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-left">
+    <div class="logo">DA</div>
+    <div>
+      <div class="header-title">Marketplace Analytics</div>
+      <div class="header-sub">Senior Data Analyst Walkthrough · 3 datasets · 11 steps</div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <span class="progress-text" id="progText">0 / 11</span>
+    <div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="sidebar-section" style="margin-bottom:10px">Steps</div>
+    <div class="step-nav" id="stepNav"></div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <div class="summary-grid">
+      <div class="sum-card">
+        <div class="sum-label">Datasets</div>
+        <div class="sum-value">3</div>
+        <div class="sum-sub">events · listings · users</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Total rows</div>
+        <div class="sum-value">9</div>
+        <div class="sum-sub">3 per dataset</div>
+      </div>
+      <div class="sum-card">
+        <div class="sum-label">Analysis steps</div>
+        <div class="sum-value">11</div>
+        <div class="sum-sub">load → insight</div>
+      </div>
+    </div>
+
+    <div class="run-all-bar">
+      <div class="run-all-info">Run all <span>11 steps</span> sequentially to see the full analyst workflow</div>
+      <button class="run-all-btn" id="runAllBtn" onclick="runAll()">&#9654; Run all steps</button>
+    </div>
+
+    <div id="stepsContainer"></div>
+  </main>
+</div>
+
+<script>
+const STEPS = [
+  {
+    id: 1,
+    title: "Load raw data",
+    subtitle: "Import all three CSVs into pandas DataFrames",
+    tags: [["pandas", "blue"], ["read_csv", "blue"]],
+    time: "12ms",
+    code: `<span class="cm"># Step 1 — Load all three datasets</span>
+<span class="kw">import</span> pandas <span class="kw">as</span> <span class="var">pd</span>
+<span class="kw">import</span> numpy <span class="kw">as</span> <span class="var">np</span>
+
+<span class="var">events</span>   <span class="op">=</span> pd.<span class="fn">read_csv</span>(<span class="str">'marketplace_events.csv'</span>)
+<span class="var">listings</span> <span class="op">=</span> pd.<span class="fn">read_csv</span>(<span class="str">'listings.csv'</span>)
+<span class="var">users</span>    <span class="op">=</span> pd.<span class="fn">read_csv</span>(<span class="str">'users.csv'</span>)
+
+<span class="cm"># Quick shape check</span>
+<span class="kw">for</span> <span class="var">name</span>, <span class="var">df</span> <span class="kw">in</span> [(<span class="str">"events"</span>, events), (<span class="str">"listings"</span>, listings), (<span class="str">"users"</span>, users)]:
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"[{name}]  shape={df.shape}  cols={list(df.columns)}"</span>)`,
+    output: `<span class="out-label">[events]</span>   shape=(3, 5)  cols=['event_id', 'user_id', 'listing_id', 'event_type', 'event_date']
+<span class="out-label">[listings]</span> shape=(3, 8)  cols=['listing_id', 'seller_id', 'category', 'subcategory', 'city', 'price', 'listing_date', 'status']
+<span class="out-label">[users]</span>    shape=(3, 4)  cols=['user_id', 'registration_date', 'city', 'user_type']`,
+    insight: "<strong>First rule:</strong> always confirm shapes and column names before touching data. You'd be surprised how often a 'clean' CSV has trailing whitespace in headers or an extra empty column."
+  },
+  {
+    id: 2,
+    title: "Parse & cast data types",
+    subtitle: "Convert date strings to datetime; validate types",
+    tags: [["datetime", "green"], ["dtypes", "green"], ["preprocessing", "amber"]],
+    time: "8ms",
+    code: `<span class="cm"># Step 2 — Type casting: convert all date strings → datetime64</span>
+events[<span class="str">'event_date'</span>]       <span class="op">=</span> pd.<span class="fn">to_datetime</span>(events[<span class="str">'event_date'</span>])
+listings[<span class="str">'listing_date'</span>]  <span class="op">=</span> pd.<span class="fn">to_datetime</span>(listings[<span class="str">'listing_date'</span>])
+users[<span class="str">'registration_date'</span>] <span class="op">=</span> pd.<span class="fn">to_datetime</span>(users[<span class="str">'registration_date'</span>])
+
+<span class="cm"># Confirm the change</span>
+<span class="fn">print</span>(events.dtypes)
+<span class="fn">print</span>(<span class="str">"\nlistings['price'].dtype :"</span>, listings[<span class="str">'price'</span>].dtype)`,
+    output: `<span class="out-col">event_id              object</span>
+<span class="out-col">user_id               object</span>
+<span class="out-col">listing_id            object</span>
+<span class="out-col">event_type            object</span>
+<span class="out-label">event_date    datetime64[us]</span>   ✓ parsed
+
+<span class="out-col">listings['price'].dtype :</span> int64   ✓ already numeric`,
+    insight: "<strong>Why this matters:</strong> if dates stay as strings, you can't compute time deltas or sort chronologically. Always cast before any analysis — doing it late causes silent bugs."
+  },
+  {
+    id: 3,
+    title: "Data audit — nulls, dupes, ranges",
+    subtitle: "Systematic quality check before any analysis",
+    tags: [["quality", "amber"], ["isnull", "amber"], ["duplicated", "amber"]],
+    time: "5ms",
+    code: `<span class="cm"># Step 3 — Full audit: nulls + duplicates + value ranges</span>
+<span class="kw">for</span> <span class="var">name</span>, <span class="var">df</span> <span class="kw">in</span> [(<span class="str">"events"</span>, events), (<span class="str">"listings"</span>, listings), (<span class="str">"users"</span>, users)]:
+    <span class="var">nulls</span>  <span class="op">=</span> df.<span class="fn">isnull</span>().<span class="fn">sum</span>().<span class="fn">sum</span>()
+    <span class="var">dupes</span>  <span class="op">=</span> df.<span class="fn">duplicated</span>().<span class="fn">sum</span>()
+    <span class="fn">print</span>(<span class="fn">f</span><span class="str">"[{name}]  nulls={nulls}  duplicates={dupes}"</span>)
+
+<span class="cm"># Check cardinality of key categoricals</span>
+<span class="fn">print</span>(<span class="str">"\nevent_type unique:"</span>, events[<span class="str">'event_type'</span>].<span class="fn">unique</span>())
+<span class="fn">print</span>(<span class="str">"category unique  :"</span>, listings[<span class="str">'category'</span>].<span class="fn">unique</span>())
+<span class="fn">print</span>(<span class="str">"status unique    :"</span>, listings[<span class="str">'status'</span>].<span class="fn">unique</span>())
+<span class="fn">print</span>(<span class="str">"user_type unique :"</span>, users[<span class="str">'user_type'</span>].<span class="fn">unique</span>())`,
+    output: `<span class="out-label">[events]</span>    nulls=<span class="out-val">0</span>  duplicates=<span class="out-val">0</span>  ✓
+<span class="out-label">[listings]</span>  nulls=<span class="out-val">0</span>  duplicates=<span class="out-val">0</span>  ✓
+<span class="out-label">[users]</span>     nulls=<span class="out-val">0</span>  duplicates=<span class="out-val">0</span>  ✓
+
+<span class="out-col">event_type unique:</span> ['view' 'favorite' 'inquiry']
+<span class="out-col">category unique  :</span> ['Real Estate' 'Motors']
+<span class="out-col">status unique    :</span> ['Active' 'Sold']
+<span class="out-col">user_type unique :</span> ['Buyer' 'Seller']`,
+    insight: "<strong>Clean data confirmed.</strong> In production you'd also check for: impossible date ranges (event before listing), orphan IDs (listing_id in events not in listings), and price outliers via IQR fencing."
+  },
+  {
+    id: 4,
+    title: "Build master merged dataframe",
+    subtitle: "LEFT JOIN events → listings → users to create analysis-ready table",
+    tags: [["merge", "purple"], ["join", "purple"], ["relational", "purple"]],
+    time: "9ms",
+    code: `<span class="cm"># Step 4 — Merge all three tables (event-centric view)</span>
+<span class="cm"># LEFT JOIN preserves all events even if lookup fails</span>
+<span class="var">df</span> <span class="op">=</span> (
+    events
+    .<span class="fn">merge</span>(listings, on<span class="op">=</span><span class="str">'listing_id'</span>, how<span class="op">=</span><span class="str">'left'</span>)
+    .<span class="fn">merge</span>(users,    on<span class="op">=</span><span class="str">'user_id'</span>,    how<span class="op">=</span><span class="str">'left'</span>)
+)
+
+<span class="cm"># Rename ambiguous city columns</span>
+<span class="var">df</span> <span class="op">=</span> df.<span class="fn">rename</span>(columns<span class="op">=</span>{<span class="str">'city_x'</span>: <span class="str">'listing_city'</span>, <span class="str">'city_y'</span>: <span class="str">'buyer_city'</span>})
+
+<span class="fn">print</span>(<span class="str">"Merged shape:"</span>, df.shape)
+<span class="fn">print</span>(df[[<span class="str">'event_id'</span>,<span class="str">'event_type'</span>,<span class="str">'listing_id'</span>,<span class="str">'category'</span>,<span class="str">'price'</span>,<span class="str">'user_type'</span>]])`,
+    output: `Merged shape: (3, 15)
+
+<span class="out-col">  event_id  event_type  listing_id     category   price  user_type</span>
+<span class="out-val">0     E001        view        L001  Real Estate  250000      Buyer</span>
+<span class="out-val">1     E002    favorite        L001  Real Estate  250000      Buyer</span>
+<span class="out-val">2     E003     inquiry        L001  Real Estate  250000      Buyer</span>`,
+    insight: "<strong>Design decision:</strong> I join event-centric (not listing-centric) so each row = one user action. This is the correct grain for funnel and engagement analysis. A listing-centric join would be right for inventory/supply analysis."
+  },
+  {
+    id: 5,
+    title: "Feature engineering",
+    subtitle: "Create derived columns: days_to_event, price_bucket, engagement weight, day-of-week",
+    tags: [["feature_eng", "pink"], ["binning", "pink"], ["lambda", "pink"]],
+    time: "11ms",
+    code: `<span class="cm"># Step 5 — Engineer new features from existing columns</span>
+
+<span class="cm"># Time delta: days between listing publish and event</span>
+df[<span class="str">'days_to_event'</span>] <span class="op">=</span> (df[<span class="str">'event_date'</span>] <span class="op">-</span> df[<span class="str">'listing_date'</span>]).dt.days
+
+<span class="cm"># Price segmentation using custom bins</span>
+df[<span class="str">'price_bucket'</span>] <span class="op">=</span> pd.<span class="fn">cut</span>(
+    df[<span class="str">'price'</span>],
+    bins<span class="op">=</span>[<span class="num">0</span>, <span class="num">50_000</span>, <span class="num">200_000</span>, <span class="num">500_000</span>],
+    labels<span class="op">=</span>[<span class="str">'Budget'</span>, <span class="str">'Mid'</span>, <span class="str">'Premium'</span>]
+)
+
+<span class="cm"># Boolean flag for conversion events</span>
+df[<span class="str">'is_inquiry'</span>] <span class="op">=</span> (df[<span class="str">'event_type'</span>] <span class="op">==</span> <span class="str">'inquiry'</span>).<span class="fn">astype</span>(<span class="fn">int</span>)
+
+<span class="cm"># Day of week for temporal pattern detection</span>
+df[<span class="str">'event_dow'</span>] <span class="op">=</span> df[<span class="str">'event_date'</span>].dt.<span class="fn">day_name</span>()
+
+<span class="fn">print</span>(df[[<span class="str">'event_type'</span>,<span class="str">'price'</span>,<span class="str">'price_bucket'</span>,<span class="str">'days_to_event'</span>,<span class="str">'is_inquiry'</span>,<span class="str">'event_dow'</span>]])`,
+    output: `<span class="out-col">  event_type   price price_bucket  days_to_event  is_inquiry    event_dow</span>
+<span class="out-val">0       view  250000      Premium              4           0    Wednesday</span>
+<span class="out-val">1   favorite  250000      Premium              4           0    Wednesday</span>
+<span class="out-val">2    inquiry  250000      Premium              5           1     Thursday</span>`,
+    insight: "<strong>Price buckets</strong> convert a continuous variable into a strategic segment — useful for dashboards and pivot analysis. <strong>days_to_event</strong> lets you measure listing freshness vs. engagement velocity."
+  },
+  {
+    id: 6,
+    title: "Descriptive statistics",
+    subtitle: "Summary stats on price: mean, std, quartiles, IQR",
+    tags: [["describe", "blue"], ["stats", "blue"], ["IQR", "blue"]],
+    time: "6ms",
+    code: `<span class="cm"># Step 6 — Full descriptive stats for the price column</span>
+<span class="var">stats</span> <span class="op">=</span> listings[<span class="str">'price'</span>].<span class="fn">describe</span>()
+<span class="var">iqr</span>   <span class="op">=</span> stats[<span class="str">'75%'</span>] <span class="op">-</span> stats[<span class="str">'25%'</span>]
+<span class="var">cv</span>    <span class="op">=</span> (stats[<span class="str">'std'</span>] <span class="op">/</span> stats[<span class="str">'mean'</span>]) <span class="op">*</span> <span class="num">100</span>
+
+<span class="fn">print</span>(stats.<span class="fn">round</span>(<span class="num">0</span>))
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nIQR           : €{iqr:,.0f}"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Coeff Var     : {cv:.1f}%  ← high dispersion"</span>)
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"Price range   : €{stats['min']:,.0f} – €{stats['max']:,.0f}"</span>)`,
+    output: `<span class="out-col">count         3.0</span>
+<span class="out-label">mean     229333.0</span>
+<span class="out-label">std      201795.0</span>
+<span class="out-col">min       18000.0</span>
+<span class="out-col">25%      134000.0</span>
+<span class="out-col">50%      250000.0</span>
+<span class="out-col">75%      335000.0</span>
+<span class="out-col">max      420000.0</span>
+
+<span class="out-label">IQR           : €201,000</span>
+<span class="out-label">Coeff Var     : 88.0%  ← high dispersion</span>
+<span class="out-col">Price range   : €18,000 – €420,000</span>`,
+    insight: "<strong>CV of 88%</strong> means price is extremely volatile relative to the mean — the Motors listing (€18K car) is a statistical outlier. With more data I'd separate categories before computing stats to avoid apples-to-oranges aggregation."
+  },
+  {
+    id: 7,
+    title: "Event type distribution & crosstab",
+    subtitle: "Frequency analysis: value_counts, normalize, crosstab",
+    tags: [["value_counts", "green"], ["crosstab", "green"], ["frequency", "green"]],
+    time: "7ms",
+    code: `<span class="cm"># Step 7 — Frequency analysis</span>
+
+<span class="cm"># Event distribution (normalized = percentages)</span>
+<span class="var">et</span> <span class="op">=</span> events[<span class="str">'event_type'</span>].<span class="fn">value_counts</span>(normalize<span class="op">=</span><span class="kw">True</span>).<span class="fn">mul</span>(<span class="num">100</span>).<span class="fn">round</span>(<span class="num">1</span>)
+<span class="fn">print</span>(<span class="str">"Event distribution (%):\n"</span>, et)
+
+<span class="cm"># Category × Status crosstab (contingency table)</span>
+<span class="var">ct</span> <span class="op">=</span> pd.<span class="fn">crosstab</span>(
+    listings[<span class="str">'category'</span>],
+    listings[<span class="str">'status'</span>],
+    margins<span class="op">=</span><span class="kw">True</span>    <span class="cm"># adds row/col totals</span>
+)
+<span class="fn">print</span>(<span class="str">"\nCategory × Status crosstab:\n"</span>, ct)`,
+    output: `Event distribution (%):
+<span class="out-col">event_type</span>
+<span class="out-val">view        33.3</span>
+<span class="out-val">favorite    33.3</span>
+<span class="out-val">inquiry     33.3</span>
+
+Category × Status crosstab:
+<span class="out-col">status        Active  Sold  All</span>
+<span class="out-col">category</span>
+<span class="out-val">Motors             1     0    1</span>
+<span class="out-val">Real Estate        1     1    2</span>
+<span class="out-label">All                2     1    3</span>`,
+    insight: "<strong>The 33/33/33 split</strong> is an artifact of small data — one event per type. The crosstab reveals that 100% of sold listings are Real Estate. Motors has 0% sell-through so far, which warrants investigation."
+  },
+  {
+    id: 8,
+    title: "Funnel analysis",
+    subtitle: "View → Favorite → Inquiry conversion rates per listing",
+    tags: [["funnel", "amber"], ["conversion", "amber"], ["groupby", "amber"]],
+    time: "14ms",
+    code: `<span class="cm"># Step 8 — Conversion funnel per listing</span>
+<span class="var">funnel_order</span> <span class="op">=</span> [<span class="str">'view'</span>, <span class="str">'favorite'</span>, <span class="str">'inquiry'</span>]
+
+<span class="cm"># Pivot: rows = listing_id, cols = event_type</span>
+<span class="var">pivot</span> <span class="op">=</span> (
+    events
+    .<span class="fn">groupby</span>([<span class="str">'listing_id'</span>, <span class="str">'event_type'</span>])
+    .<span class="fn">size</span>()
+    .<span class="fn">unstack</span>(fill_value<span class="op">=</span><span class="num">0</span>)
+    .<span class="fn">reindex</span>(columns<span class="op">=</span>funnel_order, fill_value<span class="op">=</span><span class="num">0</span>)
+)
+
+<span class="cm"># Conversion rates</span>
+pivot[<span class="str">'fav_rate'</span>]     <span class="op">=</span> (pivot[<span class="str">'favorite'</span>] <span class="op">/</span> pivot[<span class="str">'view'</span>].<span class="fn">replace</span>(<span class="num">0</span>, np.nan) <span class="op">*</span> <span class="num">100</span>).<span class="fn">round</span>(<span class="num">1</span>)
+pivot[<span class="str">'inq_rate'</span>]     <span class="op">=</span> (pivot[<span class="str">'inquiry'</span>] <span class="op">/</span> pivot[<span class="str">'view'</span>].<span class="fn">replace</span>(<span class="num">0</span>, np.nan) <span class="op">*</span> <span class="num">100</span>).<span class="fn">round</span>(<span class="num">1</span>)
+
+<span class="fn">print</span>(pivot)`,
+    output: `<span class="out-col">event_type  view  favorite  inquiry  fav_rate  inq_rate</span>
+<span class="out-col">listing_id</span>
+<span class="out-label">L001           1         1        1     100.0     100.0</span>  ← full funnel
+<span class="out-val">L002           0         0        0       NaN       NaN</span>  ← no engagement
+<span class="out-val">L003           0         0        0       NaN       NaN</span>  ← no engagement`,
+    insight: "<strong>L001 has a 100% conversion rate</strong> — every view converted to favorite and inquiry. But this is based on n=1, so statistically meaningless. L002 and L003 need promotion to generate awareness. The <code>replace(0, NaN)</code> trick avoids division-by-zero errors silently."
+  },
+  {
+    id: 9,
+    title: "Seller performance analysis",
+    subtitle: "groupby aggregation: listing count, avg price, sell rate per seller",
+    tags: [["groupby", "purple"], ["agg", "purple"], ["seller", "purple"]],
+    time: "10ms",
+    code: `<span class="cm"># Step 9 — Seller-level performance metrics</span>
+<span class="var">seller_stats</span> <span class="op">=</span> listings.<span class="fn">groupby</span>(<span class="str">'seller_id'</span>).<span class="fn">agg</span>(
+    total_listings <span class="op">=</span> (<span class="str">'listing_id'</span>,  <span class="str">'count'</span>),
+    avg_price      <span class="op">=</span> (<span class="str">'price'</span>,       <span class="str">'mean'</span>),
+    total_value    <span class="op">=</span> (<span class="str">'price'</span>,       <span class="str">'sum'</span>),
+    sold_count     <span class="op">=</span> (<span class="str">'status'</span>,      <span class="kw">lambda</span> x: (x <span class="op">==</span> <span class="str">'Sold'</span>).<span class="fn">sum</span>())
+).<span class="fn">reset_index</span>()
+
+<span class="cm"># Derived KPI: sell-through rate</span>
+seller_stats[<span class="str">'sell_rate_%'</span>] <span class="op">=</span> (
+    seller_stats[<span class="str">'sold_count'</span>] <span class="op">/</span> seller_stats[<span class="str">'total_listings'</span>] <span class="op">*</span> <span class="num">100</span>
+).<span class="fn">round</span>(<span class="num">1</span>)
+
+<span class="fn">print</span>(seller_stats.<span class="fn">to_string</span>(index<span class="op">=</span><span class="kw">False</span>))`,
+    output: `<span class="out-col"> seller_id  total_listings   avg_price  total_value  sold_count  sell_rate_%</span>
+<span class="out-label">      U002               2    335000.0       670000           1         50.0</span>
+<span class="out-val">      U005               1     18000.0        18000           0          0.0</span>`,
+    insight: "<strong>U002</strong> is the dominant seller — 2 listings totalling €670K with a 50% sell-through. U005 lists only budget Motors stock (€18K) with 0 sales. In a real scenario I'd join this back to the users table to enrich with seller registration age."
+  },
+  {
+    id: 10,
+    title: "Engagement scoring",
+    subtitle: "Weighted event scoring: view=1, favorite=3, inquiry=10 per listing",
+    tags: [["scoring", "red"], ["weighted", "red"], ["ranking", "red"]],
+    time: "8ms",
+    code: `<span class="cm"># Step 10 — Engagement score: weight each event type by intent signal</span>
+<span class="var">weights</span> <span class="op">=</span> {<span class="str">'view'</span>: <span class="num">1</span>, <span class="str">'favorite'</span>: <span class="num">3</span>, <span class="str">'inquiry'</span>: <span class="num">10</span>}
+
+events[<span class="str">'weight'</span>] <span class="op">=</span> events[<span class="str">'event_type'</span>].<span class="fn">map</span>(weights)
+
+<span class="var">eng</span> <span class="op">=</span> (
+    events.<span class="fn">groupby</span>(<span class="str">'listing_id'</span>)[<span class="str">'weight'</span>]
+    .<span class="fn">sum</span>()
+    .<span class="fn">reset_index</span>()
+    .<span class="fn">rename</span>(columns<span class="op">=</span>{<span class="str">'weight'</span>: <span class="str">'engagement_score'</span>})
+)
+
+<span class="cm"># Merge back with listing metadata</span>
+<span class="var">eng</span> <span class="op">=</span> eng.<span class="fn">merge</span>(
+    listings[[<span class="str">'listing_id'</span>,<span class="str">'category'</span>,<span class="str">'city'</span>,<span class="str">'price'</span>,<span class="str">'status'</span>]],
+    on<span class="op">=</span><span class="str">'listing_id'</span>, how<span class="op">=</span><span class="str">'right'</span>
+).<span class="fn">fillna</span>(<span class="num">0</span>).<span class="fn">sort_values</span>(<span class="str">'engagement_score'</span>, ascending<span class="op">=</span><span class="kw">False</span>)
+
+<span class="fn">print</span>(eng.<span class="fn">to_string</span>(index<span class="op">=</span><span class="kw">False</span>))`,
+    output: `<span class="out-col"> listing_id  engagement_score     category    city   price  status</span>
+<span class="out-label">       L001              14.0  Real Estate  Berlin  250000  Active</span>  ← top engaged
+<span class="out-val">       L002               0.0       Motors  Munich   18000  Active</span>
+<span class="out-val">       L003               0.0  Real Estate Hamburg  420000    Sold</span>`,
+    insight: "<strong>Score = 1 (view) + 3 (favorite) + 10 (inquiry) = 14</strong> for L001. Zero for L002 and L003. This scoring model is commonly used in marketplace analytics to prioritise which listings need a boost. The weights are business-configurable."
+  },
+  {
+    id: 11,
+    title: "Time-to-first-engagement analysis",
+    subtitle: "Days from listing publish to first buyer interaction — listing velocity metric",
+    tags: [["timedelta", "green"], ["velocity", "green"], ["KPI", "green"]],
+    time: "13ms",
+    code: `<span class="cm"># Step 11 — Days from listing publication to first event</span>
+<span class="cm"># This is the 'listing velocity' KPI used by marketplace ops teams</span>
+
+<span class="var">first_event</span> <span class="op">=</span> (
+    events
+    .<span class="fn">groupby</span>(<span class="str">'listing_id'</span>)[<span class="str">'event_date'</span>]
+    .<span class="fn">min</span>()
+    .<span class="fn">reset_index</span>()
+    .<span class="fn">rename</span>(columns<span class="op">=</span>{<span class="str">'event_date'</span>: <span class="str">'first_event_date'</span>})
+)
+
+<span class="var">velocity</span> <span class="op">=</span> listings.<span class="fn">merge</span>(first_event, on<span class="op">=</span><span class="str">'listing_id'</span>, how<span class="op">=</span><span class="str">'left'</span>)
+velocity[<span class="str">'days_to_first_event'</span>] <span class="op">=</span> (
+    velocity[<span class="str">'first_event_date'</span>] <span class="op">-</span> velocity[<span class="str">'listing_date'</span>]
+).dt.days
+
+<span class="fn">print</span>(velocity[[<span class="str">'listing_id'</span>,<span class="str">'category'</span>,<span class="str">'city'</span>,<span class="str">'price'</span>,
+                <span class="str">'listing_date'</span>,<span class="str">'first_event_date'</span>,<span class="str">'days_to_first_event'</span>]]
+      .<span class="fn">to_string</span>(index<span class="op">=</span><span class="kw">False</span>))
+
+<span class="cm"># Summary: average velocity for listings that got engagement</span>
+<span class="var">avg_vel</span> <span class="op">=</span> velocity[<span class="str">'days_to_first_event'</span>].<span class="fn">dropna</span>().<span class="fn">mean</span>()
+<span class="fn">print</span>(<span class="fn">f</span><span class="str">"\nAvg days to first event: {avg_vel:.1f} days"</span>)`,
+    output: `<span class="out-col"> listing_id    category    city   price listing_date first_event_date  days_to_first_event</span>
+<span class="out-label">       L001 Real Estate  Berlin  250000   2025-02-01       2025-02-05                  4.0</span>
+<span class="out-val">       L002      Motors  Munich   18000   2025-02-03              NaT                  NaN</span>
+<span class="out-val">       L003 Real Estate Hamburg  420000   2025-02-10              NaT                  NaN</span>
+
+<span class="out-label">Avg days to first event: 4.0 days</span>`,
+    insight: "<strong>L001 attracted its first view in 4 days</strong> — strong velocity for a €250K listing. L002 and L003 have NaN (no engagement yet). In production, listings with NaN after 7 days would trigger an automated re-promotion or price-drop nudge workflow."
+  }
+];
+
+let stepStates = STEPS.map(() => 'pending');
+let runningAll = false;
+
+function buildNav() {
+  const nav = document.getElementById('stepNav');
+  STEPS.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.id = `nav-${i}`;
+    btn.innerHTML = `<span class="nav-num">${s.id}</span><span>${s.title}</span>`;
+    btn.onclick = () => scrollToStep(i);
+    nav.appendChild(btn);
+  });
+}
+
+function buildSteps() {
+  const container = document.getElementById('stepsContainer');
+  STEPS.forEach((s, i) => {
+    const tagHtml = s.tags.map(([t, c]) => `<span class="tag tag-${c}">${t}</span>`).join('');
+    const card = document.createElement('div');
+    card.className = 'step-card';
+    card.id = `step-${i}`;
+    card.innerHTML = `
+      <div class="step-header">
+        <span class="step-number">STEP ${s.id}</span>
+        <div class="step-title-wrap">
+          <div class="step-title">${s.title}</div>
+          <div class="step-subtitle">${s.subtitle}</div>
+          <div class="step-tags">${tagHtml}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          <div class="step-status" id="status-${i}">
+            <span class="dot dot-pending"></span> pending
+          </div>
+          <button class="run-btn" id="runBtn-${i}" onclick="runStep(${i})">&#9654; Run</button>
+        </div>
+      </div>
+      <div class="step-body">
+        <div class="code-wrap">
+          <div class="code-toolbar">
+            <span class="code-lang"><span class="lang-dot"></span>python3</span>
+            <button class="copy-btn" onclick="copyCode(${i})">Copy</button>
+          </div>
+          <pre id="code-${i}">${s.code}</pre>
+        </div>
+        <div class="output-wrap" id="out-wrap-${i}" style="display:none;">
+          <div class="output-toolbar">
+            <span class="output-label">▶ Output</span>
+            <span class="output-time" id="out-time-${i}"></span>
+          </div>
+          <pre class="output" id="out-${i}"></pre>
+        </div>
+        <div class="insight-wrap" id="insight-wrap-${i}" style="display:none;">
+          <div class="insight-icon">💡</div>
+          <div class="insight-text">${s.insight}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+    setTimeout(() => card.classList.add('visible'), 60 * i);
+  });
+}
+
+function scrollToStep(i) {
+  document.getElementById(`step-${i}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function runStep(i, auto = false) {
+  if (stepStates[i] === 'done' && !auto) return;
+  const btn = document.getElementById(`runBtn-${i}`);
+  const statusEl = document.getElementById(`status-${i}`);
+  const outWrap = document.getElementById(`out-wrap-${i}`);
+  const outEl = document.getElementById(`out-${i}`);
+  const insightWrap = document.getElementById(`insight-wrap-${i}`);
+  const navItem = document.getElementById(`nav-${i}`);
+  const timeEl = document.getElementById(`out-time-${i}`);
+
+  stepStates[i] = 'running';
+  btn.className = 'run-btn running';
+  btn.textContent = '⏳ Running...';
+  statusEl.innerHTML = '<span class="dot dot-running"></span> running';
+  navItem.classList.add('active');
+
+  const delay = 400 + Math.random() * 500;
+  await new Promise(r => setTimeout(r, delay));
+
+  outEl.innerHTML = STEPS[i].output;
+  outWrap.style.display = 'block';
+  insightWrap.style.display = 'flex';
+  timeEl.textContent = `${STEPS[i].time}`;
+
+  stepStates[i] = 'done';
+  btn.className = 'run-btn done';
+  btn.textContent = '✓ Done';
+  statusEl.innerHTML = '<span class="dot dot-done"></span> complete';
+  navItem.classList.remove('active');
+  navItem.classList.add('done');
+
+  updateProgress();
+}
+
+async function runAll() {
+  if (runningAll) return;
+  runningAll = true;
+  const btn = document.getElementById('runAllBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Running...';
+
+  for (let i = 0; i < STEPS.length; i++) {
+    stepStates[i] = 'pending';
+    scrollToStep(i);
+    await runStep(i, true);
+    await new Promise(r => setTimeout(r, 180));
+  }
+
+  btn.textContent = '✓ All complete';
+  runningAll = false;
+}
+
+function updateProgress() {
+  const done = stepStates.filter(s => s === 'done').length;
+  const pct = (done / STEPS.length * 100).toFixed(0);
+  document.getElementById('progText').textContent = `${done} / ${STEPS.length}`;
+  document.getElementById('progFill').style.width = pct + '%';
+}
+
+function copyCode(i) {
+  const raw = document.getElementById(`code-${i}`).innerText;
+  navigator.clipboard.writeText(raw).catch(() => {});
+  const btn = document.querySelectorAll('.copy-btn')[i];
+  btn.textContent = 'Copied!';
+  setTimeout(() => btn.textContent = 'Copy', 1500);
+}
+
+buildNav();
+buildSteps();
+</script>
+</body>
+</html>
