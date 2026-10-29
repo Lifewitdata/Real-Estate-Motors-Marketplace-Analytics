@@ -1,0 +1,26 @@
+name: Property research verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: python -m pytest -q
+      - run: python -m property_research.pipeline --snapshot
+      - name: Dashboard integration
+        run: python -c "from streamlit.testing.v1 import AppTest; a=AppTest.from_file('dashboard/app.py').run(timeout=60); assert not a.exception; assert len(a.tabs)==4"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: official-data-property-research
+          path: |
+            outputs/*.csv
+            outputs/*.json
+            outputs/*.md
+            outputs/market_dashboard.html

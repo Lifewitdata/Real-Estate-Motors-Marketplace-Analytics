@@ -1,0 +1,59 @@
+{
+  "sources": [
+    {
+      "source_id": "nyc_dof_brooklyn_2024",
+      "provider": "NYC Department of Finance",
+      "url": "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/2024/2024_brooklyn.xlsx",
+      "landing_page": "https://www.nyc.gov/site/finance/property/property-annualized-sales-update.page",
+      "file_name": "2024_brooklyn.xlsx",
+      "sha256": "89dcea93331548d7798e2b57808633e581a5cc6e20a9ccac2c14ed0e79c70ab4",
+      "rows": 21994,
+      "verified_at_utc": "2026-10-29T03:35:28.471966+00:00",
+      "publisher_notes": [
+        "BROOKLYN ANNUAL SALES FOR CALENDAR YEAR 2024",
+        "All Sales From January 2024 - December 2024. Property Tax System (PTS) data as of 04/08/2025.",
+        "For sales prior to the Final, Neighborhood Name and Descriptive Data reflect the Final Roll 2024/25.",
+        "Sales after the Final Roll, Neighborhood Name and Descriptive Data reflect current data.",
+        "Building Class Category is based on Building Class at Time of Sale.",
+        "Note: Condominium and cooperative sales are on the unit level and understood to have a count of one."
+      ],
+      "scope_rows": 1161
+    },
+    {
+      "source_id": "nyc_dof_brooklyn_2025",
+      "provider": "NYC Department of Finance",
+      "url": "https://www.nyc.gov/assets/finance/downloads/pdf/rolling_sales/annualized-sales/2025/2025_brooklyn.xlsx",
+      "landing_page": "https://www.nyc.gov/site/finance/property/property-annualized-sales-update.page",
+      "file_name": "2025_brooklyn.xlsx",
+      "sha256": "46d5c544da11214f784c9bcf1ef8a19ac20b246fa6fb60b77df907902f2314d5",
+      "rows": 23472,
+      "verified_at_utc": "2026-10-29T03:35:31.515703+00:00",
+      "publisher_notes": [
+        "BROOKLYN ANNUAL SALES FOR CALENDAR YEAR 2025",
+        "All Sales From January 2025 - December 2025. Property Tax System (PTS) data as of 05/04/2026.",
+        "For sales prior to the Final, Neighborhood Name and Descriptive Data reflect the Final Roll 2025/26.",
+        "Sales after the Final Roll, Neighborhood Name and Descriptive Data reflect current data.",
+        "Building Class Category is based on Building Class at Time of Sale.",
+        "Note: Condominium and cooperative sales are on the unit level and understood to have a count of one."
+      ],
+      "scope_rows": 1212
+    }
+  ],
+  "references": [
+    {
+      "file_name": "building_classes.html",
+      "url": "https://www.nyc.gov/assets/finance/jump/hlpbldgcode.html",
+      "sha256": "43cf73a4f30c6c482274fb36276b594c1e98e4797fbbe1f9f18cfe64ed9bd4b9"
+    },
+    {
+      "file_name": "sales_glossary.pdf",
+      "url": "https://www.nyc.gov/assets/finance/downloads/pdf/07pdf/glossary_rsf071607.pdf",
+      "sha256": "48e116556424efa30748a7a930cf8c4e7462302eb1f79cc0b36e303f1e455aeb"
+    }
+  ],
+  "scope": "Brooklyn class at time of sale C1/C2/C3",
+  "all_borough_rows": 45466,
+  "out_of_scope_rows": 43093,
+  "snapshot_sha256": "ccebabda78df32971073fcfbaeb251007bc248d4dc73fc593dad4051ba63e141",
+  "generated_at_utc": "2026-10-29T03:35:31.550081+00:00"
+}

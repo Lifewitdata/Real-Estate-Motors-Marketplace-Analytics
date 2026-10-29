@@ -1,0 +1,9 @@
+primary_exclusion,rows
+eligible,1045
+gross_area_outside_screen,2
+low_consideration_review,121
+missing_or_nonfinite_numeric,4
+mixed_or_invalid_units,4
+possible_multi_parcel_consideration,117
+ppsf_outside_screen,8
+zero_or_negative_price,1072
