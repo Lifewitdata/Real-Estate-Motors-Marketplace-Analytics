@@ -11,7 +11,11 @@ jobs:
         with:
           python-version: '3.11'
           cache: pip
-      - run: python -m pip install -e '.[dev]'
+      - run: python -m pip install -r requirements.txt pytest
+      - name: Fresh deployment startup (no generated outputs)
+        run: |
+          test ! -d outputs
+          python -c "from streamlit.testing.v1 import AppTest; a=AppTest.from_file('streamlit_app.py').run(timeout=120); assert not a.exception; assert len(a.tabs)==4; assert len(a.metric)==3"
       - run: python -m pytest -q
       - run: python -m property_research.pipeline --snapshot
       - name: Dashboard integration

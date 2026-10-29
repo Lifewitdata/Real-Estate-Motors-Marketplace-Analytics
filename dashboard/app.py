@@ -6,15 +6,14 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from property_research.comparables import select_comparables
+from property_research.dashboard_startup import prepare_dashboard
 
 st.set_page_config(page_title="Property Market Research",layout="wide")
 root=Path(__file__).resolve().parents[1]
 out=Path(os.environ.get("PROPERTY_OUTPUT_DIR",str(root/"outputs")))
 st.title("Brooklyn Multifamily Market Research")
 st.caption("NYC Department of Finance · public recorded sales · classes C1, C2 and C3")
-if not (out/"manifest.json").exists():
-    st.info("Run python -m property_research.pipeline --snapshot from the project root.")
-    st.stop()
+out=prepare_dashboard(str(out.resolve()))
 m=json.loads((out/"manifest.json").read_text())
 st.warning("Appraisal-support research only. No certified appraisal or opinion of market value. Transactions and property attributes need appraiser verification.")
 st.caption("Historical sale-date cutoff: "+m["cutoff"]+". Later-published source files are used; this is not a point-in-time historical appraisal.")
@@ -29,7 +28,7 @@ with tabs[0]:
     for col,label,key in zip(cols,["Source scope records","Research-eligible sales","Flagged / excluded"],["scope_rows","eligible_rows","excluded_rows"]):
         col.metric(label,f"{m[key]:,}")
     trend=read("quarterly_trends.csv")
-    st.plotly_chart(px.line(trend,x="quarter",y="median_ppsf",color="building_class_at_time_of_sale",markers=True),width="stretch")
+    st.plotly_chart(px.line(trend,x="quarter",y="median_ppsf",color="building_class_at_time_of_sale",markers=True),use_container_width=True)
     st.caption("Median recorded price / gross square foot. Quarterly changes can reflect property mix; they are not a repeat-sales appreciation index.")
     markets=read("neighborhood_summary.csv")
     cls=st.selectbox("Building class",["All"]+sorted(markets.building_class_at_time_of_sale.unique().tolist()))
