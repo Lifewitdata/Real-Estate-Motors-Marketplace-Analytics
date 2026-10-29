@@ -16,6 +16,10 @@ jobs:
       - run: python -m property_research.pipeline --snapshot
       - name: Dashboard integration
         run: python -c "from streamlit.testing.v1 import AppTest; a=AppTest.from_file('dashboard/app.py').run(timeout=60); assert not a.exception; assert len(a.tabs)==4"
+      - name: Execute Python analysis notebooks
+        run: |
+          pip install -r requirements-notebooks.txt
+          python scripts/verify_notebooks.py
       - uses: actions/upload-artifact@v4
         with:
           name: official-data-property-research
