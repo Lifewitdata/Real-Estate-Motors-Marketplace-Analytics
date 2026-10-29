@@ -1,0 +1,17 @@
+{
+  "as_of_date": "2025-12-31",
+  "borough": 3,
+  "focus_classes": ["C1", "C2", "C3"],
+  "min_price": 100000,
+  "min_gross_sqft": 1000,
+  "max_gross_sqft": 100000,
+  "min_ppsf": 25,
+  "max_ppsf": 3000,
+  "min_year_built": 1800,
+  "lookback_days": 365,
+  "max_size_difference": 0.3,
+  "max_age_difference_years": 20,
+  "max_unit_difference": 3,
+  "max_comparables": 5,
+  "minimum_comparables": 3
+}
