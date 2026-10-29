@@ -1,5 +1,9 @@
 # Real Estate Market Research & Comparable Sales
 
+**Start with the executed Python analysis:** [Open the Jupyter notebook](notebooks/01_market_research_and_comparables.ipynb). It includes visible Python code, result tables, charts and written findings. Streamlit is an optional dashboard, not a replacement for the analysis.
+
+To run the notebook, install the project's dependencies below, then `python -m pip install -r requirements-notebooks.txt`. Open it in Jupyter or VS Code and run all cells from a fresh kernel. For automated execution, run `python scripts/verify_notebooks.py`. GitHub Actions executes every cell as a separate check.
+
 An executable Python/SQL research project for supervised real estate appraisal support: collect official transaction records, document their provenance, screen data quality, compare properties and prepare a review packet.
 
 **Verified dataset:** 2,373 Brooklyn walk-up apartment sales records from NYC Department of Finance annual 2024/2025 workbooks. The default policy retains 1,045 research-eligible records and preserves 1,328 excluded records for review. These are descriptive research screens, not verified arm's-length sales or appraised values.
