@@ -1,0 +1,2 @@
+# Install this repository's src-layout package and its declared runtime dependencies.
+-e .

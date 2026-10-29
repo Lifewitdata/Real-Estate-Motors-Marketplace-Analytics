@@ -13,10 +13,8 @@ An executable Python/SQL research project for supervised real estate appraisal s
 Requires Python 3.10 or newer.
 
 ```bash
-python -m pip install -e '.[dev]'
-python -m property_research.pipeline --snapshot
-streamlit run dashboard/app.py
-python -m pytest -q
+python -m pip install -r requirements.txt
+streamlit run streamlit_app.py
 ```
 
 The committed extract supports reproducible offline runs. To rebuild from the official workbooks, run `python -m property_research.pipeline --download`. Upstream files may change; inspect the new source hashes and counts. Raw workbooks and generated outputs are ignored by Git.
@@ -55,3 +53,14 @@ The workbooks were published after the historical sale period. The 2025-12-31 cu
 17 tests cover exclusions, duplicate/conflicting records, possible package consideration, same-parcel removal, price-independent ranking, insufficient comparable handling, SQL reconciliation and source traceability. GitHub Actions runs tests, rebuilds the snapshot report and smoke-tests all four dashboard tabs. Tests demonstrate software behavior, not appraisal accuracy.
 
 The original hardcoded marketplace walkthrough is preserved in [legacy/](legacy/) for historical context. It is not the analytical evidence for this project.
+
+## Streamlit Community Cloud deployment
+
+- Repository: `Lifewitdata/Real-Estate-Motors-Marketplace-Analytics`
+- Branch: `main` after merging the startup fix.
+- Main file path: `streamlit_app.py` (the existing `dashboard/app.py` path also works).
+- Python: 3.11, matching CI. No secrets or external database credentials needed.
+
+The root `requirements.txt` installs the local Python package and its dependencies. On a fresh start, the app builds missing dashboard artifacts from the committed, hash-verified CSV automatically. It does not download workbooks. Complete outputs from an explicit pipeline run are preserved, including custom research configurations. For a separate output location, set `PROPERTY_OUTPUT_DIR` to a writable directory.
+
+If an existing deployment failed, merge the fix, confirm its entrypoint and reboot it. Check the Streamlit deployment logs for any remaining host-specific error. For local regression checks, install pytest and run `python -m pytest -q`.
